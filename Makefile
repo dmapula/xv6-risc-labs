@@ -134,6 +134,8 @@ UPROGS=\
 	$U/_zombie\
 	$U/_uptime\
 	$U/_time\
+	$U/_matmul\
+	$U/_sleep\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
