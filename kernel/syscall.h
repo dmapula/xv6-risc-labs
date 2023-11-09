@@ -21,3 +21,5 @@
 #define SYS_mkdir  20
 #define SYS_close  21
 #define SYS_wait2  22  //Choose an unused syscall number
+#define SYS_getpriority  23  // New syscall number
+#define SYS_setpriority  24  // New syscall number
