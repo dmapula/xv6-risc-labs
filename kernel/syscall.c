@@ -105,6 +105,7 @@ extern uint64 sys_wait(void);
 extern uint64 sys_write(void);
 extern uint64 sys_uptime(void);
 extern uint64 sys_freepmem(void);
+extern uint64 sys_overcommit();
 
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -130,6 +131,7 @@ static uint64 (*syscalls[])(void) = {
 [SYS_close]   sys_close,
 [SYS_wait2]   sys_wait2,
 [SYS_freepmem] sys_freepmem, //Added syscall mapping
+[SYS_overcommit] sys_overcommit, // Task 7 syscall mapping
 };
 
 void syscall(void){

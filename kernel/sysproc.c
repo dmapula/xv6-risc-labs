@@ -39,19 +39,26 @@ sys_wait(void)
 }
 
 uint64
-sys_sbrk(void)
-{
-  int64 n;  // Changed to 64-bit integer
-  uint64 sz;
+sys_sbrk(void) {
+  int n;
+  struct proc *p = myproc();
 
-  if(argint64(0, &n) < 0)  // This function now needs to handle 64-bit arguments
+  if(argint(0, &n) < 0)
     return -1;
-  sz = myproc()->sz;
-  if (n > 0 && MAXVA - sz < n)  // Check for overflow or exceeding address space
-    return -1;
-  myproc()->sz = sz + n;
-  return sz;
+
+  uint64 new_sz = p->sz + n;
+  if (!p->allow_overcommit) {
+    // Check if new size exceeds MAXVA or causes overflow
+    if (new_sz > MAXVA || new_sz < p->sz) {
+      return -1;
+    }
+    // Optionally, immediately allocate physical memory here
+  }
+
+  p->sz = new_sz;
+  return p->sz - n; // Old size
 }
+
 
 
 
@@ -105,3 +112,11 @@ sys_freepmem(void)
     return freepmem_impl();
 }
 
+uint64
+sys_overcommit(void) {
+  int enable;
+  if(argint(0, &enable) < 0)
+    return -1;
+  myproc()->allow_overcommit = enable;
+  return 0;
+}

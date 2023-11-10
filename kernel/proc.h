@@ -97,6 +97,7 @@ struct proc {
   struct proc *parent;         // Parent process
 
   int priority; // New priority field
+  int allow_overcommit; // Task 7 field
 
   // these are private to the process, so p->lock need not be held.
   uint64 kstack;               // Virtual address of kernel stack

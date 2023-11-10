@@ -26,6 +26,7 @@ int sleep(int);
 int uptime(void);
 int wait2(int*, struct rusage*);
 int sbrk(int64 n);
+int overcommit(int enable);
 
 // ulib.c
 int stat(const char*, struct stat*);

@@ -23,4 +23,6 @@
 #define SYS_wait2  22  //Choose an unused syscall number
 #define SYS_getpriority  23  // New syscall number
 #define SYS_setpriority  24  // New syscall number
-#define SYS_freepmem 25
+#define SYS_freepmem 25 // Task 1 syscall
+#define SYS_overcommit  26 // Task 7 syscall
+

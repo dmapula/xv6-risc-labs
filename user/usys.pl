@@ -38,3 +38,4 @@ entry("sleep");
 entry("uptime");
 entry("freepmem");
 entry("sbrk");
+entry("overcommit");

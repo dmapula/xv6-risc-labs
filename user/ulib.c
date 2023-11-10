@@ -134,3 +134,8 @@ memcpy(void *dst, const void *src, uint n)
 {
   return memmove(dst, src, n);
 }
+
+int
+overcommit(int enable) {
+  return syscall(SYS_overcommit, enable);
+}
