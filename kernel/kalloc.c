@@ -80,3 +80,19 @@ kalloc(void)
     memset((char*)r, 5, PGSIZE); // fill with junk
   return (void*)r;
 }
+
+// Calculate the total free physical memory.
+uint64
+freepmem_impl(void) {
+  struct run *r;
+  uint64 free_pages = 0;
+
+  acquire(&kmem.lock);
+  for(r = kmem.freelist; r; r = r->next) {
+    free_pages++;
+  }
+  release(&kmem.lock);
+
+  return free_pages * PGSIZE; // PGSIZE is the size of a page (4096 bytes).
+}
+

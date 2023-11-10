@@ -41,16 +41,17 @@ sys_wait(void)
 uint64
 sys_sbrk(void)
 {
-  int addr;
   int n;
+  uint64 sz;
 
   if(argint(0, &n) < 0)
     return -1;
-  addr = myproc()->sz;
-  if(growproc(n) < 0)
-    return -1;
-  return addr;
+  sz = myproc()->sz;
+  myproc()->sz = sz + n;
+  // Removed call to growproc()
+  return sz;
 }
+
 
 uint64
 sys_sleep(void)
@@ -95,3 +96,10 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+uint64
+sys_freepmem(void)
+{
+    return freepmem_impl();
+}
+

@@ -104,6 +104,7 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_wait(void);
 extern uint64 sys_write(void);
 extern uint64 sys_uptime(void);
+extern uint64 sys_freepmem(void);
 
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -128,11 +129,10 @@ static uint64 (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_wait2]   sys_wait2,
+[SYS_freepmem] sys_freepmem, //Added syscall mapping
 };
 
-void
-syscall(void)
-{
+void syscall(void){
   int num;
   struct proc *p = myproc();
 
