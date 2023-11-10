@@ -41,16 +41,18 @@ sys_wait(void)
 uint64
 sys_sbrk(void)
 {
-  int n;
+  int64 n;  // Changed to 64-bit integer
   uint64 sz;
 
-  if(argint(0, &n) < 0)
+  if(argint64(0, &n) < 0)  // This function now needs to handle 64-bit arguments
     return -1;
   sz = myproc()->sz;
+  if (n > 0 && MAXVA - sz < n)  // Check for overflow or exceeding address space
+    return -1;
   myproc()->sz = sz + n;
-  // Removed call to growproc()
   return sz;
 }
+
 
 
 uint64

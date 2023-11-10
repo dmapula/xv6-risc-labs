@@ -25,6 +25,7 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int wait2(int*, struct rusage*);
+int sbrk(int64 n);
 
 // ulib.c
 int stat(const char*, struct stat*);
@@ -43,3 +44,4 @@ int atoi(const char*);
 int memcmp(const void *, const void *, uint);
 void *memcpy(void *, const void *, uint);
 uint64 freepmem(void);
+uint64 sbrk(int n);
