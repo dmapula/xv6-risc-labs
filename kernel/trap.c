@@ -50,7 +50,10 @@ usertrap(void)
   // save user program counter.
   p->trapframe->epc = r_sepc();
   
-  if(r_scause() == 8){
+  uint64 scause = r_scause();
+  uint64 stval = r_stval();
+
+  if(scause == 8){
     // system call
 
     if(p->killed)
@@ -65,6 +68,22 @@ usertrap(void)
     intr_on();
 
     syscall();
+  } else if(scause == 0x0000000000000005 || scause == 0x0000000000000007) {
+    // Load or store fault
+    if(stval < p->sz) {
+      char *mem = kalloc();
+      if(mem == 0){
+        p->killed = 1;
+      } else {
+        if(mappages(p->pagetable, PGROUNDDOWN(stval), PGSIZE, (uint64)mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0){
+          kfree(mem);
+          p->killed = 1;
+        }
+      }
+    } else {
+      // Invalid address, kill the process
+      p->killed = 1;
+    }
   } else if((which_dev = devintr()) != 0){
     // ok
   } else {
@@ -84,6 +103,7 @@ usertrap(void)
 
   usertrapret();
 }
+
 
 //
 // return to user space
