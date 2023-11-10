@@ -172,10 +172,11 @@ uvmunmap(pagetable_t pagetable, uint64 va, uint64 npages, int do_free)
     panic("uvmunmap: not aligned");
 
   for(a = va; a < va + npages*PGSIZE; a += PGSIZE){
-    if((pte = walk(pagetable, a, 0)) == 0)
-      panic("uvmunmap: walk");
+    pte = walk(pagetable, a, 0);
+    if(pte == 0)
+      continue; // Skip unmapping if page is not mapped
     if((*pte & PTE_V) == 0)
-      panic("uvmunmap: not mapped");
+      continue; // Skip unmapping if page is not valid
     if(PTE_FLAGS(*pte) == PTE_V)
       panic("uvmunmap: not a leaf");
     if(do_free){
@@ -185,6 +186,7 @@ uvmunmap(pagetable_t pagetable, uint64 va, uint64 npages, int do_free)
     *pte = 0;
   }
 }
+
 
 // create an empty user page table.
 // returns 0 if out of memory.
