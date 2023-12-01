@@ -41,6 +41,7 @@ extern struct cpu cpus[NCPU];
 // the trapframe includes callee-saved user registers like s0-s11 because the
 // return-to-user path via usertrapret() doesn't return through
 // the entire kernel call stack.
+
 struct trapframe {
   /*   0 */ uint64 kernel_satp;   // kernel page table
   /*   8 */ uint64 kernel_sp;     // top of process's kernel stack
@@ -80,10 +81,33 @@ struct trapframe {
   /* 280 */ uint64 t6;
 };
 
-enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
+//struct with lock for list of mmr family members
+struct mmr_list{
+  struct spinlock lock;
+  int valid;
+};
+//struck for node in list of processes that share a mapped memory region
+struct mmr_node{
+  int listid;
+  struct proc *proc;
+  struct mmr_node *next;
+  struct mmr_node *prev;
+
+};
+// struct for shared memory region
+struct mmr{
+  uint64 addr;
+  int length;
+  int prot;
+  int flags;
+  int valid;
+  struct file *file;
+  int fd;
+  struct mmr_node mmr_family;
+};
 
 // Per-process state
-struct proc {
+struct proc{
   struct spinlock lock;
 
   // p->lock must be held when using these:
@@ -92,12 +116,10 @@ struct proc {
   int killed;                  // If non-zero, have been killed
   int xstate;                  // Exit status to be returned to parent's wait
   int pid;                     // Process ID
-  int cputime;
+
   // wait_lock must be held when using this:
   struct proc *parent;         // Parent process
 
-  int priority; // New priority field
-  int allow_overcommit; // Task 7 field
 
   // these are private to the process, so p->lock need not be held.
   uint64 kstack;               // Virtual address of kernel stack
@@ -108,4 +130,6 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  struct mmr mmr[MAX_MMR];
+  uint64 cur_max;
 };
