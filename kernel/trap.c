@@ -50,10 +50,7 @@ usertrap(void)
   // save user program counter.
   p->trapframe->epc = r_sepc();
   
-  uint64 scause = r_scause();
-  uint64 stval = r_stval();
-
-  if(scause == 8){
+  if(r_scause() == 8){
     // system call
 
     if(p->killed)
@@ -68,31 +65,71 @@ usertrap(void)
     intr_on();
 
     syscall();
-  } else if(scause == 0x0000000000000005 || scause == 0x0000000000000007) {
-    // Load or store fault
-    if(stval < p->sz) {
-      char *mem = kalloc();
-      if(mem == 0){
-        p->killed = 1;
-      } else {
-        if(mappages(p->pagetable, PGROUNDDOWN(stval), PGSIZE, (uint64)mem, PTE_W|PTE_X|PTE_R|PTE_U) != 0){
-          kfree(mem);
-          p->killed = 1;
-        }
-      }
-    } else {
-      // Invalid address, kill the process
-      p->killed = 1;
-    }
   } else if((which_dev = devintr()) != 0){
     // ok
-  } else {
+  } else if(r_scause() == 13 || r_scause() == 15){
+    uint64 stval = r_stval();//Fault address
+    //check if faultin address is greater than or equals to proc's
+    if ( stval >= p->sz) {
+
+     for(int i = 0; i < MAX_MMR; i++){
+
+      if(p->mmr[i].valid && stval >= p->mmr[i].addr && stval < p->mmr[i].addr + p->mmr[i].length){
+
+	int valid_permission = 0;
+  	if(r_scause()==13 && (p->mmr[i].prot & PTE_R)){
+
+		valid_permission = 1;}
+	else if(r_scause() == 15 && (p->mmr[i].prot & PTE_W)){
+
+		valid_permission = 1;}
+	if(!valid_permission){
+          p->killed = 1;
+          exit(-1);
+       }
+      }
+     }
+    }
+    char *mem = kalloc(); // Allocate a physical memory frame
+    if(mem == 0){
+       // Failed to allocate physical memory, kill the process
+       p->killed = 1;
+       exit(-1);
+    }
+
+    // Install page table mapping for the virtual page containing the faulti	ng address
+    if (mappages(p->pagetable, PGROUNDDOWN(stval), PGSIZE, (uint64)mem, PTE_W | PTE_X | PTE_R | PTE_U) < 0) {
+      kfree(mem);
+      p->killed = 1;
+      exit(-1);
+    }
+     // Add new mapping for the allocated physical page into the page tables for all processes in the family
+      for(int i = 0; i < MAX_MMR; i++) {
+        if(p->mmr[i].valid && stval >= p->mmr[i].addr && stval < p->mmr[i].addr + p->mmr[i].length) {
+	  struct mmr_list *mmr_list = get_mmr_list(p->mmr->mmr_family.listid);
+	  acquire(&mmr_list[p->mmr[i].mmr_family.listid].lock);
+	  struct mmr_node *nf = p->mmr[i].mmr_family.next;
+          while (nf != &(p->mmr[i].mmr_family) ) {
+            struct proc *family_proc = nf->proc;
+            if (family_proc != p) {
+              // Duplicate the new mapping for other processes in the family
+              if (mappages(family_proc->pagetable, PGROUNDDOWN(stval), PGSIZE, (uint64)mem, PTE_W | PTE_X | PTE_R | PTE_U) < 0) {
+                kfree(mem);
+                p->killed = 1;
+                exit(-1);
+              }
+            }
+            nf = nf->next;
+          }
+	  release(&mmr_list[p->mmr[i].mmr_family.listid].lock);
+        }
+      }
+  }
+    else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
     p->killed = 1;
   }
-
-  myproc()->cputime++; //Increment cputime
 
   if(p->killed)
     exit(-1);
@@ -103,7 +140,6 @@ usertrap(void)
 
   usertrapret();
 }
-
 
 //
 // return to user space
