@@ -25,4 +25,9 @@
 #define SYS_setpriority  24  // New syscall number
 #define SYS_freepmem 25 // Task 1 syscall
 #define SYS_overcommit  26 // Task 7 syscall
+#define SYS_sem_init    27 //Task 6 syscall
+#define SYS_sem_destroy 28 //Task 6 syscall
+#define SYS_sem_wait    29 //Task 6 syscall
+#define SYS_sem_post    30 //Task 6 syscall
+
 

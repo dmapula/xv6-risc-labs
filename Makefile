@@ -143,6 +143,7 @@ UPROGS=\
 	$U/_prodcons2\
 	$U/_prodcons3\
 	$U/_fstat\
+	$U/_prodcons-sem\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

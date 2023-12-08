@@ -39,3 +39,8 @@ entry("uptime");
 entry("freepmem");
 entry("sbrk");
 entry("overcommit");
+entry("sem_init");
+entry("sem_destroy");
+entry("sem_wait");
+entry("sem_post");
+
